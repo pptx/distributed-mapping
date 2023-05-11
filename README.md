@@ -1,5 +1,5 @@
 # distributed-mapping
-Implementing distributed mapping algorithm through variational inference
+Performing distributed mapping through a distributed Gaussian variational inference algorithm.
 
 ### Dependencies
 Python3

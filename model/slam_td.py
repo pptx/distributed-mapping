@@ -494,7 +494,7 @@ def gvi_diag_eprobit(T, B, X, y, X_p, y_p, fpoints, lscale):
     
 def load_sbkm_parameters():
     parameters = {'intel': \
-                      ('./../data/sbkm/data/intel.csv',
+                      ('./../data/intel/intel.csv',
                        (0.2, 0.2), # grid resolution for occupied samples and free samples, respectively
                        (-20, 20, -25, 10),  # area to be mapped [x1_min, x1_max, x2_min, x2_max]
                        1, # skip

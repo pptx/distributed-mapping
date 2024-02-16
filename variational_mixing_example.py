@@ -15,6 +15,7 @@ by fewer points being sampled in the entire space.
 import bayespy
 import numpy as np
 from scipy.stats import multivariate_normal
+import matplotlib
 import matplotlib.pyplot as plt
 
 import collections
@@ -270,7 +271,7 @@ def gaussian_mixture_2d(X, alpha=None, scale=2, fill=False, axes=None, **kwargs)
     
 if __name__ == '__main__':
     # Set up the data operation
-    n_agent = 5
+    n_agent = 4
     dim = 2
     # Agent's observation model
     H = 0.5*np.eye(dim)
@@ -279,12 +280,13 @@ if __name__ == '__main__':
     prob_type = ['Normal' for i in range(n_agent)]
     n_params = [2 for i in range(n_agent)]
     # List of tuples for the Normal parameters
-    params = [(4*np.random.rand(dim), (1./4)*np.random.rand()*np.eye(dim)) for i in range(n_agent)]
+    # params = [(4*np.random.rand(dim), (1./4)*np.random.rand()*np.eye(dim)) for i in range(n_agent)]
+    params = [(2*np.array([np.cos(i*np.pi/2), np.sin(i*np.pi/2)]), (1./4)*np.eye(dim)) for i in range(n_agent)]
 
     param_dict = {'n_agent':n_agent, 'dim':dim, 'prob_type':prob_type, 'n_params':n_params, 'parameters': params}
     weights = gen_weights(n_agent)
 
-    obs = 7*np.random.rand(1, dim)
+    obs = np.array([1.,1.])#7*np.random.rand(1, dim)
     M = 1e5
     N_gen, x, x_mix, w, resampled_x = create_samples(weights, param_dict, obs, (H, Sigma_z), M)
     # N_gen, x, w, resampled_x = create_lik_samples(weights, param_dict, obs, (H, Sigma_z), M)
@@ -347,6 +349,7 @@ if __name__ == '__main__':
         for j in range(X.shape[1]):
             pdf[i,j] = distr.pdf([X[i,j], Y[i,j]])
 
+    matplotlib.rcParams.update({'font.size': 12})
     fig, ax = plt.subplots()
     ax.contourf(X, Y, pdf, cmap='GnBu')
     ax.scatter(resampled_x[:,0], resampled_x[:,1], color='chocolate', s = 5, alpha=0.3, label='Resampled data')

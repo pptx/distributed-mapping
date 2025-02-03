@@ -1,4 +1,5 @@
 import numpy as np
+np.float_ = np.float64
 import matplotlib.pyplot as plt
 import scipy
 import random
@@ -112,13 +113,7 @@ def plot_network(X_test, A):
     return 0
     
 def gvi(T, M, B, X, y, X_p, y_p, fpoints, lscale):
-    """
-    Updates follow Eqn. 30-31 in https://hal.inria.fr/hal-03086627/document
-    
-    Implement extended Kalman filter in this function.
-    message_mu is in agent-neighbor format
-    (i,j) represents message from agent i to neighbor j
-    
+    """    
     :param B: Batch size of collected data
     Learning from experiments: 
     Randomized data is better, maybe sample from range (0,t) to simulate reality.
@@ -241,7 +236,7 @@ def dist_gvi_eprobit(n, A, T, B, lik_factor, X, y, X_p, y_p, fpoints, lscale):
             
             # Generate likelihood update
             n_omega_[i,:,:] = n_omega_[i,:,:] + lik_factor*dder
-            # n_sigma_[i,:,:] =  cov_i  - gamma*(1./(1.+gamma*phi_cov_phi))*np.outer(cov_phi, cov_phi)
+            n_sigma_[i,:,:] = n_omega_[i,:,:]  - gamma*(1./(1.+gamma*phi_cov_phi))*np.outer(cov_phi, cov_phi)
         
             term = der_coeff*cov_phi - gamma*(1./(1.+gamma*phi_cov_phi))*(cov_phi@der)*cov_phi
             n_mu = mu + lik_factor*term
@@ -347,18 +342,6 @@ def dist_gvi_diag_eprobit(n, A, T, B, lik_factor, X, y, X_p, y_p, fpoints, lscal
     return mu_update, final_sigma, [error, l_error]
     
 def gvi_eprobit(T, B, X, y, X_p, y_p, fpoints, lscale):
-    """
-    Updates follow Eqn. 30-31 in https://hal.inria.fr/hal-03086627/document
-    
-    Implement extended Kalman filter in this function.
-    message_mu is in agent-neighbor format
-    (i,j) represents message from agent i to neighbor j
-    
-    :param B: Batch size of collected data
-    Learning from experiments: 
-    Randomized data is better, maybe sample from range (0,t) to simulate reality.
-    Lengthscales of 0.3 and 3 were bad for predictions.
-    """
     # T = len(X)
     xi = 0.61
     d_dim = fpoints.shape[0]+1
@@ -419,12 +402,6 @@ def gvi_eprobit(T, B, X, y, X_p, y_p, fpoints, lscale):
     
 def gvi_diag_eprobit(T, B, X, y, X_p, y_p, fpoints, lscale):
     """
-    Updates follow Eqn. 30-31 in https://hal.inria.fr/hal-03086627/document
-    
-    Implement extended Kalman filter in this function.
-    message_mu is in agent-neighbor format
-    (i,j) represents message from agent i to neighbor j
-    
     :param B: Batch size of collected data
     Learning from experiments: 
     Randomized data is better, maybe sample from range (0,t) to simulate reality.
@@ -599,10 +576,6 @@ def sbkm_fpoints(g, nf, type_ = 'random'):
                 lscale[r_idx+1] = 0.5                
         return fpoints, lscale
 
-"""
-Analytical vs Autograd gradients: Try batch simulation
-Find the proper number of feature points
-"""
 if __name__ == '__main__':
     from network_functions import generate_connected_graph
     T = 100000
@@ -632,12 +605,12 @@ if __name__ == '__main__':
     
     B = 1 # Keep at 1 until batch implemented.
     M = 100
-    lik_factor = 1
+    lik_factor = n
     
     data = {}
     for nf in [1500]: #[200, 400, 600, 800, 1200, 2000]:
         fpoints, lscale = sbkm_fpoints(g, nf, type_ = 'samples')
-        type_ = 'gvip' # 'gvi' 'gvip' 'gvidp' 'dgvip' 'dgvidp'
+        type_ = 'dgvidp' # 'gvi' 'gvip' 'gvidp' 'dgvip' 'dgvidp'
         if type_ == 'gvi':
             mu_update, cov_update_t, error = gvi(T, M, B, X_train, Y_train, X_test, Y_test, fpoints, lscale)
         elif type_ == 'gvip':
@@ -662,7 +635,7 @@ if __name__ == '__main__':
         data["error"] = error
         data["lscale"] = lscale
         
-        filename = 'slam_algo_'+type_+'_nf_'+str(nf)+'.pcl'
+        filename = 'slam_algo_'+type_+'_nf_'+str(nf)+'_lfac_'+str(lik_factor)+'.pcl'
         with open(filename, 'wb') as handle:
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
